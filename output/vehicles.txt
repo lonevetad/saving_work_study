@@ -1,0 +1,33 @@
+{
+    "Table": {
+        "AttributeDefinitions": [
+            {
+                "AttributeName": "vin",
+                "AttributeType": "S"
+            }
+        ],
+        "TableName": "vehicles",
+        "KeySchema": [
+            {
+                "AttributeName": "vin",
+                "KeyType": "HASH"
+            }
+        ],
+        "TableStatus": "ACTIVE",
+        "CreationDateTime": "2020-04-22T15:55:17.585000+02:00",
+        "ProvisionedThroughput": {
+            "NumberOfDecreasesToday": 0,
+            "ReadCapacityUnits": 5,
+            "WriteCapacityUnits": 5
+        },
+        "TableSizeBytes": 1681,
+        "ItemCount": 1,
+        "TableArn": "arn:aws:dynamodb:eu-west-1:668487117877:table/vehicles",
+        "TableId": "9d5d3aea-b564-46f7-aee4-878372a0bf21",
+        "TableClassSummary": {
+            "TableClass": "STANDARD_INFREQUENT_ACCESS",
+            "LastUpdateDateTime": "2022-02-10T18:03:12.022000+01:00"
+        },
+        "DeletionProtectionEnabled": false
+    }
+}

@@ -1,0 +1,32 @@
+{
+    "TableDescription": {
+        "AttributeDefinitions": [
+            {
+                "AttributeName": "vin",
+                "AttributeType": "S"
+            }
+        ],
+        "TableName": "vehicles_MarcoOttina",
+        "KeySchema": [
+            {
+                "AttributeName": "vin",
+                "KeyType": "HASH"
+            }
+        ],
+        "TableStatus": "CREATING",
+        "CreationDateTime": "2023-05-16T12:11:27.592000+02:00",
+        "ProvisionedThroughput": {
+            "NumberOfDecreasesToday": 0,
+            "ReadCapacityUnits": 0,
+            "WriteCapacityUnits": 0
+        },
+        "TableSizeBytes": 0,
+        "ItemCount": 0,
+        "TableArn": "arn:aws:dynamodb:eu-west-1:668487117877:table/vehicles_MarcoOttina",
+        "TableId": "b087dcf3-4be7-4b7b-839a-656453e79ac1",
+        "BillingModeSummary": {
+            "BillingMode": "PAY_PER_REQUEST"
+        },
+        "DeletionProtectionEnabled": false
+    }
+}

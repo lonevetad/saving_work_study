@@ -1,0 +1,32 @@
+{
+    "vin": {
+        "S": 
+        "1NXBR12E51Z554380"
+    },
+    "maker": {
+        "S": 
+        "FCA"
+    },
+    "brand": {
+        "S": 
+        "Fiat"
+    },
+    "model": {
+        "S": 
+        "Tipo"
+    },
+    "plate": {
+        "S": 
+        "AB123CD"
+    },
+    "color": {
+        "S": 
+        "Sand"
+    },
+    "status": {
+        "M": {      
+            "odometer": {"N": "510"},
+            "unit": {"S": "km"}
+        }
+    }
+}

@@ -1,0 +1,1 @@
+./get_v_item.sh vehicles_MarcoOttina vin 1NXBR12E51Z554380

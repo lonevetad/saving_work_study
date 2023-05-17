@@ -1,0 +1,12 @@
+{
+    "vin": "0LUAQ01D40W443279",
+    "maker": "BMW",
+    "brand": "BMW",
+    "model": "BMW",
+    "plate": "BM333WW",
+    "color": "Black",
+    "status": {
+        "odometer": 0,
+        "unit": "km"
+    }
+  }

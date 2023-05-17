@@ -1,0 +1,12 @@
+{
+    "vin": "1NXBR12E51Z554380",
+    "maker": "FCA",
+    "brand": "Fiat",
+    "model": "Tipo",
+    "plate": "AB123CD",
+    "color": "Sand",
+    "status": {
+        "odometer": 510,
+        "unit": "km"
+    }
+}

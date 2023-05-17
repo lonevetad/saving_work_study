@@ -1,0 +1,32 @@
+{
+    "vin": {
+        "S": 
+        "1NXBR12E51Z554382"
+    },
+    "maker": {
+        "S": 
+        "FCA"
+    },
+    "brand": {
+        "S": 
+        "Fiat"
+    },
+    "model": {
+        "S": 
+        "Supersportiva"
+    },
+    "plate": {
+        "S": 
+        "FF888MN"
+    },
+    "color": {
+        "S": 
+        "RossoFerrari"
+    },
+    "status": {
+        "M": {      
+            "odometer": {"N": "1024"},
+            "unit": {"S": "km"}
+        }
+    }
+}

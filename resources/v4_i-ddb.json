@@ -1,0 +1,13 @@
+{
+    "vin": { "S": "2MYCS23F62A665492"},
+    "maker": { "S": "Audi"},
+    "brand": { "S": "Audi"},
+    "model": { "S": "R6"},
+    "plate": { "S": "AU111DI"},
+    "color": { "S": "GreenRich"},
+    "status": { "M": {
+        "odometer": { "N": "0"},
+        "unit": { "S": "km"}
+      }
+    }
+  }

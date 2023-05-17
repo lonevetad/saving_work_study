@@ -1,0 +1,12 @@
+{
+    "vin": "1NXBR12E51Z554381",
+    "maker": "FCA",
+    "brand": "Fiat",
+    "model": "Punto",
+    "plate": "EZ610AB",
+    "color": "Blue",
+    "status": {
+        "odometer": 88,
+        "unit": "km"
+    }
+}
