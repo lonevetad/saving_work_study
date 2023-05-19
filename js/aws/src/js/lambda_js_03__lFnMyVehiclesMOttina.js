@@ -65,6 +65,7 @@ function getItemToPush(event){
         event.newWehicleData ||
              JSON.parse(event.body).newVehicleData
         ;
+        
     if(!vehicleDataRaw){
         return undefined;
     }
@@ -107,11 +108,8 @@ async function executePUTNewVehicle(ddbClient, event, context){
     };
     
     const putResult = await ddbClient.send(new PutItemCommand(newVehicleData));
-    operationResult = {
-        "put-status": "success :D",
-        putResult
-    };
-    codeResponse = 200;
+    operationResult = putResult;
+    codeResponse = putResult ? 200 : 503;
     
     return {
         "operationResult": operationResult,
@@ -151,7 +149,7 @@ export const handler = async(event, context) => {
             operationResult = resp.operationResult;
             codeResponse = resp.codeResponse;
             
-            if(operationResult === undefined || codeResponse !== 200){
+            if(codeResponse !== 200){
                 operationResult = {
                   "note": "PUT gone bad",
                   "old_response": JSON.stringify(
@@ -180,6 +178,6 @@ export const handler = async(event, context) => {
   
     return {
         statusCode: codeResponse,
-        body: operationResult
+        body: JSON.stringify(operationResult)
     };
 };

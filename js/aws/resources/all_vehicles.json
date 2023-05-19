@@ -1,0 +1,194 @@
+[
+    {
+        "vin": "1111222223339",
+        "brand": "Fiat",
+        "color": "Yellow",
+        "maker": "FCA",
+        "model": "Panda",
+        "plate": "AA012BC",
+        "status": {
+            "odometer": "666",
+            "unit": "km"
+        }
+    },
+    {
+        "vin": "1NXBR12E51Z554386",
+        "brand": "Bugatti",
+        "color": "Opal",
+        "maker": "BUG",
+        "model": "Veyron",
+        "plate": "BU001Ga",
+        "status": {
+            "odometer": "70",
+            "unit": "km"
+        }
+    },
+    {
+        "vin": "2MYCS23F62A665492",
+        "brand": "Audi",
+        "color": "GreenRich",
+        "maker": "Audi",
+        "model": "R6",
+        "plate": "AU111DI",
+        "status": {
+            "odometer": "0",
+            "unit": "km"
+        }
+    },
+    {
+        "vin": "1NXBR12E51Z554383",
+        "brand": "Fiat",
+        "color": "Bianco",
+        "maker": "FCA",
+        "model": "Panda",
+        "plate": "AA001BB",
+        "status": {
+            "odometer": "256000",
+            "unit": "km"
+        }
+    },
+    {
+        "vin": "0LUAQ01D40W443278",
+        "brand": "BMW",
+        "color": "Red",
+        "maker": "BMW",
+        "model": "BMW",
+        "plate": "BN333WW",
+        "status": {
+            "odometer": "0",
+            "unit": "km"
+        }
+    },
+    {
+        "vin": "1111222223333",
+        "brand": "Fiat",
+        "color": "Yellow",
+        "maker": "FCA",
+        "model": "Panda",
+        "plate": "AA007BC",
+        "status": {
+            "odometer": "29000",
+            "unit": "km"
+        }
+    },
+    {
+        "vin": "1NXBR12E51Z554384",
+        "brand": "Fiat",
+        "color": "Green",
+        "maker": "FCA",
+        "model": "Panda",
+        "plate": "AA001BC",
+        "status": {
+            "odometer": "256000",
+            "unit": "km"
+        }
+    },
+    {
+        "vin": "1NXBR12E51Z554381",
+        "brand": "Fiat",
+        "color": "Blue",
+        "maker": "FCA",
+        "model": "Punto",
+        "plate": "EZ610AB",
+        "status": {
+            "odometer": "88",
+            "unit": "km"
+        }
+    },
+    {
+        "vin": "1111222223336",
+        "brand": "Fiat",
+        "color": "Pink",
+        "maker": "FCA",
+        "model": "Panda",
+        "plate": "AA009BC",
+        "status": {
+            "odometer": "31000",
+            "unit": "km"
+        }
+    },
+    {
+        "vin": "1NXBR12E51Z554385",
+        "brand": "Fiat",
+        "color": "GrigioTopo",
+        "maker": "FCA",
+        "model": "Panda",
+        "plate": "AC001BB",
+        "status": {
+            "odometer": "128000",
+            "unit": "km"
+        }
+    },
+    {
+        "vin": "1NXBR12E51Z554382",
+        "brand": "Fiat",
+        "color": "RossoFerrari",
+        "maker": "FCA",
+        "model": "Supersportiva",
+        "plate": "FF888MN",
+        "status": {
+            "odometer": "1024",
+            "unit": "km"
+        }
+    },
+    {
+        "vin": "1111222223335",
+        "brand": "Fiat",
+        "color": "Pink",
+        "maker": "FCA",
+        "model": "Panda",
+        "plate": "AA008BC",
+        "status": {
+            "odometer": "29000",
+            "unit": "km"
+        }
+    },
+    {
+        "vin": "1111222223337",
+        "brand": "Fiat",
+        "color": "Pink",
+        "maker": "FCA",
+        "model": "Panda",
+        "plate": "AA010BC",
+        "status": {
+            "odometer": "31000",
+            "unit": "km"
+        }
+    },
+    {
+        "vin": "1NXBR12E51Z554380",
+        "brand": "Fiat",
+        "color": "Sand",
+        "maker": "FCA",
+        "model": "Tipo",
+        "plate": "AB123CD",
+        "status": {
+            "odometer": "510",
+            "unit": "km"
+        }
+    },
+    {
+        "vin": "0LUAQ01D40W443279",
+        "brand": "BMW",
+        "color": "ReBlack",
+        "maker": "BMW",
+        "model": "BMW",
+        "plate": "BM333WW",
+        "status": {
+            "odometer": "0",
+            "unit": "km"
+        }
+    },
+    {
+        "vin": "1111222223338",
+        "brand": "Fiat",
+        "color": "Pink",
+        "maker": "FCA",
+        "model": "Panda",
+        "plate": "AA011BC",
+        "status": {
+            "odometer": "31000",
+            "unit": "km"
+        }
+    }
+]
