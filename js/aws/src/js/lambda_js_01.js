@@ -9,9 +9,9 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 const REGION = "eu-west-1"; //e.g. "us-east-1"
 
 const CREDENTIALS = {
-    "accessKeyId": "ASIAZXJHP5Q27LIVYVMU",
-    "secretAccessKey": "n9nNkFNuXamZeY+6qOfeQIoDOwsCURNYPnSr7/4R",
-    "sessionToken": "IQoJb3JpZ2luX2VjEBsaCWV1LXdlc3QtMSJIMEYCIQCujvo+vD611Xy/qajcyZa7e/1VsW2THZ5hMKuuM01digIhAKJ0hG/vAJFRtUe7+P3CDfXs4TvnMQ2XDKM7cyIcpX76KoEDCEQQBBoMNjY4NDg3MTE3ODc3IgztJku5REgGZCDuafgq3gLA6Kat9gBFdHPoFL/rmk9QfjOOByF5etG9iN7aBIy0mp7lDv1nGdOa+/5ghbiRCbyQUNb/nX0hekQyHANscH1O1bA9TDlgFcNX8HoJ0KLKSYjwzKye/g4t8z3iFT2DC1LX2t9JC7+zYDIQgp+C3AV6a73noWUmGu4ZvQpTY/7HQKCmMlJmmJpqWwhvwZlAG1SynFlN0f93JCoRYj+UEoESjPqqKN6yowlaq/Ii+l2G0595Wi2VfSyR7nX0oAwC7G0u30rZBCOmChDk+ZLGcmBYtkHHYRdG4RWqJkDWuufef58gpkoFawAsk5Zl/5xtBsv5bRtyzCxRwwktNJrAXjRjZKCRwvUYESjTSJ2J8h18BOzkxF0fhmbaaaGROxfsmSAmuv67lJ4RF96/xO4QYJnh5XPpdpy86T8RyD87wK5q2BRpJNDTpAAxB6PVl9WgTLg2C4tdk/tnpB3BRxi90TCP5ZKjBjqlAV1WVON1VTeCb4xp3DUxm2d2s+oKOy0oCz1u2gl4sc5nU2iLejRgPv03gxYhSdwrW7zfWGM3+4GQjpDbv/dtla9GW+0tdg7trd3+L4l8o+f5BeM8dudIxKSOhISa4hROnjngC9o+Abs5R6gfGM8N+9ZXU90/rqq6SxuT6btZCMoa3fxkktmMOg98bDKbdEh75nn7H46RYbgATLunDSZ/FuAlHY+XSA=="
+    "accessKeyId": "ASIAZXJHP5Q2QGOAT4U4",
+    "secretAccessKey": "yLPnT5Ly6HOhgN8Z/UT9fY4KmCozZ+5bpGcwlz7o",
+    "sessionToken": "IQoJb3JpZ2luX2VjEDEaCWV1LXdlc3QtMSJHMEUCICZZyywv3zVTehHFO/QKyIm/ok1JL6AfIGTkSRmX4qj0AiEAsC6O80qE4ADJNm8CrpWEVaTq9J6F6MGrkyfNkglUDKEqgQMIWhAEGgw2Njg0ODcxMTc4NzciDBwXuP6V5b94nutwKCreArIs8IHYbG9S0+FPORxlHoxxzfhKGSRox9XrSQ1jvTwS4ieUSI6X7LBgyD5D7d7W+pr6HDF14AjPFQ7YrNy1mJ1VSGfkivd7rbjXCwpm+i6Du7rowOg4M5VijekvgUG04wpHfw3gRFkK7TdtiBEO5ubnoX79dFid4utU1D/PqM5XpbjJzvIx/d6trbHR6wuDiPj8jg9kpmKzb0PayRyMeUV73UjqxeJ3MfvxLhJv5jeMvxCrwHmOehPoAiIEoiAJUFkCkyTxbkj6/Fges6YXZpm0ju9SVnf25akNFnsXp3UCBF0/zbtfo58KBcPnxjzER8f35pV9NcWHd2E+oPgZoMbLc3VmmN6e7rdk3kfvnJqx9dOTUxf91r368tnbnCLnoQSJAz4hPhzdLI3GmN6nYhUBBZoYMZ3ZHhzFgtpeNK4+fvBX+ZM19mbYRX+MpfeJ7c01JFSyOdH7itVNM/XhMIHJl6MGOqYBPhl9IosBzVAa21IN3vNn+CCuWH9W2LV0NCC6oBXGda/Xp+1d7wj9RG7AnPg7TdIHALdiOdXib44bH9Dm36hk9bfQ4J8B/yDYja67E5HNu3/kc8cvCPjM7Pcw1krr/1cqGn48Sx86+remNAvlDswc7VdKm+dMFt/X4scUYk0p3f/gEJOn1I0R2jjhKy6OXqZJ9fuKcAsUaTya3Bq18o3TfXlQPup9Pw=="
 };
 
 const TABLE_NAME = "vehicles_MarcoOttina";
@@ -103,6 +103,19 @@ export const ITEMS_TEST = [
                 "unit": {"S": "km"}
             }
         }
+    },
+    {
+        "vin": { "S": "1NXBR12E51Z554386" },
+        "maker": { "S": "BUG" },
+        "brand": { "S": "Bugatti" },
+        "model": { "S": "Veyron" },
+        "plate": { "S": "BU001Ga" },
+        "color": { "S": "Opal" },
+        "status": { "M": {      
+                "odometer": {"N": "7"},
+                "unit": {"S": "km"}
+            }
+        }
     }
 ];
 
@@ -114,6 +127,26 @@ function getItemTest(preferredIndex = undefined){
   return ITEMS_TEST[preferredIndex];
 }
 
+function getItemToPush(event, preferredIndex = undefined){
+    const vehicleDataRaw = event.newWehicleData;
+    if(!vehicleDataRaw){
+        return getItemTest(preferredIndex);
+    }
+    
+    return {
+        "vin": { "S": vehicleDataRaw.vin },
+        "maker": { "S": vehicleDataRaw.maker },
+        "brand": { "S": vehicleDataRaw.brand },
+        "model": { "S": vehicleDataRaw.model },
+        "plate": { "S": vehicleDataRaw.plate },
+        "color": { "S": vehicleDataRaw.color },
+        "status": { "M": {      
+                "odometer": {"N": vehicleDataRaw.status.odometer.toString() },
+                "unit": {"S": vehicleDataRaw.status.unit }
+            }
+        }
+    }
+}
 
 export const handler = async(event, context) => {
     console.log("event:", event);
@@ -128,27 +161,29 @@ export const handler = async(event, context) => {
       },
       // ProjectionExpression: "ATTRIBUTE_NAME",
     };
+    if(! (event.vehicleKeyQuery)){
+        getParams.Key.vin.S = event.vehicleKeyQuery;
+    }
   
-    console.log("getting", JSON.stringify(getParams.Key), "...");
     const dataFetched = await ddbClient.send(new GetItemCommand(getParams));
-    console.log("Success GET", dataFetched.Item);
     
     // Put a new Item
-    const newWehicleData = {
+    const newVehicleData = {
       TableName: TABLE_NAME,
-      Item: getItemTest()
+      Item: getItemToPush(event)
     };
-    const putResult = await ddbClient.send(new PutItemCommand(newWehicleData));
-    console.log("\n\nResult PUT-ting", newWehicleData, "\n->", putResult);
-    
+    const putResult = await ddbClient.send(new PutItemCommand(newVehicleData));
+
     const response = {
         statusCode: 200,
-        body: JSON.stringify({
-          "results": {
-            "GET": dataFetched,
-            "PUT": putResult
-          }
-        }),
+        body: //JSON.stringify(
+            {
+              "results": {
+                "GET": dataFetched,
+                "PUT": putResult
+              }
+            }
+        //),
     };
     return response;
 };
