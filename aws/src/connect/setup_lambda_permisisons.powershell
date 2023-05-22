@@ -1,0 +1,8 @@
+$Env:AWS_ACCESS_KEY_ID="COSEH"
+$Env:AWS_SECRET_ACCESS_KEY="COSEH"
+$Env:AWS_SESSION_TOKEN="COSEH"
+$Env:AWS_REGION="eu-central-1"
+aws lambda add-permission --function-name arn:aws:lambda:eu-central-1:668487117877:function:mOttina_connect_holy_days --statement-id holiday_checker --principal connect.amazonaws.com --action lambda:InvokeFunction --principal 668487117877 --output json
+{
+    "Statement": "{\"Sid\":\"holiday_checker\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"arn:aws:iam::668487117877:root\"},\"Action\":\"lambda:InvokeFunction\",\"Resource\":\"arn:aws:lambda:eu-central-1:668487117877:function:mOttina_connect_holy_days\"}"
+}
