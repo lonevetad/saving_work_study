@@ -14,7 +14,10 @@ const WEEK_DAYS = [
     
     
     export const handler = async(event, context, callback) => {
+        console.log("START");
         console.log("event:", event);
+        
+        
         
         const valueTest = event.Details ? event.Details.Parameters.test : "NotAValue";
         let date_ob = new Date();
@@ -30,10 +33,10 @@ const WEEK_DAYS = [
                 "isWeekend": isWeekend,
             };
         
-        // TODO implement
+        // TODO what to do with the rest?
         const response = {
             statusCode: 200,
-            body: JSON.stringify(responseBody),
+            //body: JSON.stringify(responseBody),
             bodyObj: responseBody
         };
         

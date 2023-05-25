@@ -1,0 +1,556 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2709
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 import sys\
+from awsglue.transforms import *\
+from awsglue.utils import getResolvedOptions\
+from pyspark.context import SparkContext\
+from awsglue.context import GlueContext\
+from awsglue.job import Job\
+import json\
+import boto3\
+import pytz\
+from datetime import datetime,timedelta\
+#import logging\
+from awsglue.dynamicframe import DynamicFrame\
+from pyspark.sql.functions import col, size, when, udf\
+\
+args = getResolvedOptions(sys.argv, ['JOB_NAME'])\
+sc = SparkContext()\
+sc.setLogLevel("ERROR")\
+glueContext = GlueContext(sc)\
+spark = glueContext.spark_session\
+job = Job(glueContext)\
+job.init(args['JOB_NAME'], args)\
+#logger = glueContext.get_logger()\
+\
+\
+today = datetime.now(pytz.timezone('Europe/Rome')) #timezone Europe/Rome rather than UTC (default)\
+\
+previousDate = today - timedelta(days=1)\
+\
+year=previousDate.strftime("%Y")\
+month=previousDate.strftime("%m")\
+day=previousDate.strftime("%d")\
+\
+\
+'''time = datetime.now(pytz.timezone('Europe/Rome')) #timezone Europe/Rome rather than UTC (default)\
+\
+\
+year=time.strftime("%Y")\
+month=time.strftime("%m")\
+day=time.strftime("%d")'''\
+\
+#day="04"\
+#month="03"\
+#year="2022"\
+\
+datasource0 = glueContext.create_dynamic_frame.from_catalog(\
+    database = "fcab-lsys-connect-prod-database",\
+    table_name = "connect",\
+    #push_down_predicate="(year==" + year + " and month==" + month + " and day==" + day + ")",\
+    push_down_predicate="(year=='2023' and month=='05' and day=='05')", \
+    #push_down_predicate="(contactcenter=='lsys-cc-prod-contact-center-01' and year=='2023' and month=='04' and day=='04')",\
+    transformation_ctx = "datasource0")\
+\
+market_id_dict=\{"ee44f486-e794-4ff9-b09c-109e1208aa43" : "CC-Leasys",\
+                "640e1649-8a9e-4576-a5d4-cf2912aeba5a" : "PT-FCA Bank",\
+                "d7456a0c-833c-41f8-8e66-e54a6b62466f" : "ES-FCA Bank",\
+                "df92d308-4d38-451a-a12a-761abf4352bf" : "GR-FCA Bank",\
+                "55eda532-74c7-407d-ab5a-888bbbd2b60e" : "FR-FCA Bank",\
+                "c57880c6-80a6-40e8-82a5-b16b561441d2" : "FR-Leasys",\
+                "21f27433-d5ce-4181-927a-a93682c9761e" : "NL-FCA Bank",\
+                "cb1c27ac-dbfd-4a6f-bf33-37d2d94ffefb" : "FR-Credit Agricole",\
+                "b7ce6533-17d8-4c72-acc1-78c08c8b3554" : "CH-FCA Bank",\
+                "64e60a25-d25b-45b6-86ef-7c7712b88353" : "BE-FCA Bank",\
+                "19c281c3-30bb-4c36-9e57-476f6492f9f6" : "IT-FCA Bank",\
+                "d3650531-361a-4a5f-aa60-f37915cf6cc4" : "DE-Leasys",\
+                "addefed0-31a3-479f-aaba-88e018bd0ce6" : "IT-Leasys", #Leasys HQ\
+                "93903ac6-b964-42d6-8383-3d90ab6799bd" : "BE-Leasys",\
+                "4ea307de-04a4-4ca8-9ba7-549923e8c64c" : "IT-Leasys",\
+                "5621b870-3169-4cb1-b9f8-a0dd8e335297" : "AT-Leasys",\
+                "671a2928-d479-4dae-8531-dd9b17f09771" : "NL-Leasys",\
+                "20d24947-7e60-479e-8e99-62fb4ff9b5d0" : "NL-FCA Bank",\
+                "860727d5-3ac3-4f4c-8992-a59d9e64d79c" : "UK-Leasys"\
+                \}\
+\
+legal_entity_dict=\{"FCA Bank"        : "F",\
+                   "Leasys"          : "L",\
+                   "Leasys Rent"     : "S",\
+                   "Credit Agricole" : "C"\
+                   \}\
+\
+business_line_dict=\{"F" : "F",\
+                    "L" : "L",\
+                    "S" : "L",\
+                    "C" : "L"\
+                    \}\
+\
+\
+#dictionary vdn padre for all instances\
+vdn_padre_dict = \{"+351210201592"  : "23484", #Leasys cc-PT\
+                  "+48221043364"   : "23321", #Leasys cc-PL\
+                  "+34919019025"   : "23328", #Leasys cc-ES provider\
+                  "+34919019026"   : "23325", #Leasys cc-ES client\
+                  "+34919019079"   : "23051", #Leasys cc-ES ugo\
+                  "+351308804778"  : "50083", #Fcab PT - FCA\
+                  "+351308804975"  : "50084", #Fcab PT - JLR\
+                  "+34919019348"   : "50039", #Fcab ES - FCA\
+                  "+34911989586"   : "50037", #Fcab ES - JLR\
+                  "+34919018097"   : "50300", #Fcab ES - HH\
+                  "+34919019263"   : "50038", #Fcab ES - Renting Online\
+                  "+34919019353"   : "50040", #Fcab ES - Renting Online\
+                  "+34919019398"   : "50041", #Fcab ES - Renting Online\
+                  "+34919019728"   : "50042", #Fcab ES - Pepecar\
+                  "+34919019750"   : "50043", #Fcab ES - Dealer\
+                  "+302103002168"  : "50055", #Fcab GR - FCA\
+                  "+302111993936"  : "50056", #Fcab GR - LMS\
+                  "+33975181064"   : "50044", #Fcab FR - CRC\
+                  "+33975181131"   : "50045", #Fcab FR - SUD\
+                  "+33975181136"   : "50046", #Fcab FR - INSURANCE\
+                  "+33975181324"   : "50048", #Fcab FR - CRC PREMIUM\
+                  "+33975181332"   : "50049", #Fcab FR - NORD\
+                  "+33975185481"   : "50050", #Fcab FR - JLR\
+                  "+33975181275"   : "50047", #Fcab FR - LMS\
+                  "+33187153405"   : "50060", #Leasys Rent FR - LeasysGo\
+                  "+33533522594"   : "50061", #Leasys Rent FR - R\'e8sa super priority\
+                  "+33975180838"   : "50062", #Leasys Rent FR - LRF\
+                  "+33975180842"   : "50063", #Leasys Rent FR - RND\
+                  "+33975180856"   : "50064", #Leasys Rent FR - Facture\
+                  "+33975180915"   : "50065", #Leasys Rent FR - Flotte\
+                  "+33975181020"   : "50066", #Leasys Rent FR - ICT\
+                  "+33975181076"   : "50067", #Leasys Rent FR - Leasys Pro\
+                  "+33975181135"   : "50068", #Leasys Rent FR - LRF Leasy SOS\
+                  "+33975181306"   : "50069", #Leasys Rent FR - RND Leasys SOS\
+                  "+33519882631"   : "50099", #Leasys Rent FR - Fiat ABO\
+                  "+390685960005"  : "50057", #Leasys Rent IT - Customer, Prenotazioni, Car cloud\
+                  "+390685960006"  : "50058", #Leasys Rent IT - Car Replacement\
+                  "+390685960007"  : "50059", #Leasys Rent IT - Leasys\
+                  "+33975181063"   : "50051", #Leasys FR - Technical\
+                  "+33975181376"   : "50052", #Leasys FR - Procurament & Supplier\
+                  "+33975185466"   : "50053", #Leasys FR - Customer\
+                  "+33975185607"   : "50054", #Leasys FR - FFSGC\
+                  "+31852086761"   : "50034", #Fcab NL - FCA Customer care\
+                  "+31852087293"   : "50035", #Fcab NL - DEALER Customer care\
+                  "+31858887642"   : "50036", #Fcab NL - LEASYS Customer care\
+                  "+31852086910"   : "50033", #Fcab NL - LMS/DEALER Split\
+                  "+31852086928"   : "50034", #Fcab NL - Customer care Split\
+                  "+31852086702"   : "50035", #Fcab NL - DEALER Customer Care split\
+                  "+31852086933"   : "50034", #Fcab NL - Leasys Collection EN\
+                  "+31702620383"   : "50034", #Fcab NL - Leasys Collection NL \
+                  "+31852086749"   : "50033", #FCAB NL - LMS/DEALER \
+                  "+31203233284"   : "50272", #FCAB NL - Findio Business \
+                  "+31203233285"   : "50273", #FCAB NL - Findio Tesla\
+                  "+31203233286"   : "50274", #FCAB NL - Findio NIO\
+                  "+31203233287"   : "50275", #FCAB NL - Findio Corporote\
+                  "+31203233221"   : "50301", #FCAB NL - VindFast\
+                  "+31102590252"   : "50036", #Leasys NL - Customer Care split\
+                  "+31852086929"   : "50036", #Leasys NL - FCAB Sales EN\
+                  "+31852086926"   : "50036", #Leasys NL - FCAB Sales NL \
+                  "+33519882657"   : "50028", #CAM FR - CAMobility\
+                  "+41445299201"   : "50081", #Fcab CH - Customer\
+                  "+41445299202"   : "50082", #Fcab CH - Dealer\
+                  "+41435084919"   : "50075", #Fcab CH - Sales&Marketing\
+                  "+41435084377"   : "50070", #Fcab CH - Direct number to Neumajer\
+                  "+41435084378"   : "50071", #Fcab CH - Direct number to Marra\
+                  "+41435084385"   : "50072", #Fcab CH - Direct number to Nebiolo\
+                  "+41435084788"   : "50073", #Fcab CH - Direct number to Mignini\
+                  "+41435085188"   : "50076", #Fcab CH - Direct number to Caputi\
+                  "+41435085258"   : "50077", #Fcab CH - Direct number to Naclerio\
+                  "+41435085379"   : "50078", #Fcab CH - Direct number to Vitto\
+                  "+41435085452"   : "50079", #Fcab CH - Direct number to Montalto\
+                  "+41445160169"   : "50080", #Fcab CH - Direct number to Calcagno\
+                  "+41435084864"   : "50074", #Fcab CH - LMS\
+                  "+3253280499"    : "50097", #Fcab BE - Customer\
+                  "+3225881063"    : "50096", #Fcab BE - LMS/Dealer\
+                  "+3253280503"    : "50098", #Fcab BE - Dealer Workkflow TEST\
+                  "+3901119620032" : "50087", #Fcab IT - Area Nord\
+                  "+3901119620148" : "50088", #Fcab IT - Area Sud\
+                  "+3901119620842" : "50089", #Fcab IT - Area Leasing\
+                  "+3901119620843" : "50090", #Fcab IT - Area Usato\
+                  "+3901119620847" : "50091", #Fcab IT - Area JLR\
+                  "+3901119620849" : "50092", #Fcab IT - Area Premium\
+                  "+3901119622979" : "50094", #Fcab IT - Prestiti personali\
+                  "+390144230019"  : "50095", #Fcab IT - Other Brand\
+                  "+3901119622351" : "50093", #Fcab IT - LMS\
+                  "+3228084061"    : "50000", #Leasys BE - Customer\
+                  "+3225880984"    : "50086", #Leasys BE - LMS/Dealer\
+                  "+48221043242"   : "50032", #Leasys HQ - Complaints PL\
+                  "+34910507943"   : "50029", #Leasys HQ - Complaint ES-PT\
+                  "+34984885023"   : "50030", #Leasys HQ - ES\
+                  "+351308810171"  : "50031", #Leasys HQ - PT\
+                  "+4932221093784" : "50261", #Leasys DE - Newleasco Customer\
+                  "+4932221095836" : "50085", #Leasys DE - LMS\
+                  "+4961429523076" : "50255", #Leasys DE - Newleasco Dealer\
+                  "+4961429523077" : "50265", #Leasys DE - Newleasco Large Account\
+                  "+4961429523078" : "50245", #Leasys DE - F2ML Customer\
+                  "+4961429523079" : "50250", #Leasys DE - F2ML Dealer\
+                  "+4961429523080" : "50270", #Leasys DE - Leasys redirect from AT\
+                  "+3901119620054" : "50210", #Fcab IT - HD FCAB\
+                  "+3901119620083" : "50212", #Fcab IT - HD JLR\
+                  "+3901118570008" : "50214", #Leasys IT - Leasys Authority Support\
+                  "+3901118570009" : "50216", #Leasys IT - Leasys Authority Carrozzeria\
+                  "+3901118570010" : "50218", #Leasys IT - Leasys Authority Meccanica\
+                  "+3901118570011" : "50220", #Leasys IT - Leasys Authority Pneumatici\
+                  "+3901118570012" : "50222", #Leasys IT - Leasys Assistenza Driver\
+                  "+3901118570013" : "50224", #Leasys IT - Operation Poste\
+                  "+3901118570014" : "50226", #Leasys IT - Mezzi Speciali\
+                  "+390144230057"  : "50230", #Leasys IT - International Service\
+                  "+4314240227"    : "50231", #Leasys AT - Main number\
+                  "+4314240228"    : "50232", #Leasys AT - Driver hotline\
+                  "+4314240229"    : "50233", #Leasys AT - Supplier hotline\
+                  "+4314240359"    : "50271", #Leasys AT - Transfer from DE\
+                  "+441134676515"  : "50238", #Leasys UK - New Leasco number\
+                  "+41445112290"   : "50272", #Dealer Service - Jeep Finance\
+                  "+41585986039"   : "50273", #Dealer Service - Alfa Romeo Finance\
+                  "+41435084720"   : "50274", #Dealer Service - Aston Martin Financial Services\
+                  "+41435084519"   : "50275", #Dealer Service - Lotus Financial Services\
+                  "+41435085334"   : "50276", #Dealer Service - Fiat Finance\
+                  "+41435084846"   : "50277", #Dealer Service - Maserati Financial Services\
+                  "+41435085013"   : "50278", #Dealer Service - Morgan Motor Finance\
+                  "+41435085819"   : "50279", #Dealer Service - Erwin Hymer Group Finance\
+                  "+41435084375"   : "50286", #Customer Service - Alfa Romeo Finance\
+                  "+41435085829"   : "50287", #Customer Service - Fiat Finance\
+                  "+41445160179"   : "50288", #Customer Service - Aston Martin Financial Services\
+                  "+41435085289"   : "50289", #Customer Service - Morgan Motor Finance\
+                  "+41435085453"   : "50290", #Customer Service - Maserati Financial Services\
+                  "+41435085458"   : "50291", #Customer Service - Erwin Hymer Group Finance\
+                  "+41435084373"   : "50292", #Customer Service - Lotus Financial Services\
+                  "+41445112327"   : "50293"  #Customer Service - Jeep Finance\
+\
+                  \
+                  \
+                   \}\
+\
+\
+#dictionary timezone for all instances except CC\
+tz_dict=\{"640e1649-8a9e-4576-a5d4-cf2912aeba5a" : "Europe/Lisbon",\
+         "d7456a0c-833c-41f8-8e66-e54a6b62466f" : "Europe/Madrid",\
+         "df92d308-4d38-451a-a12a-761abf4352bf" : "Europe/Athens",\
+         "55eda532-74c7-407d-ab5a-888bbbd2b60e" : "Europe/Paris",\
+         "c57880c6-80a6-40e8-82a5-b16b561441d2" : "Europe/Paris",\
+         "19c281c3-30bb-4c36-9e57-476f6492f9f6" : "Europe/Rome",\
+         "cb1c27ac-dbfd-4a6f-bf33-37d2d94ffefb" : "Europe/Paris",\
+         "21f27433-d5ce-4181-927a-a93682c9761e" : "Europe/Amsterdam",\
+         "b7ce6533-17d8-4c72-acc1-78c08c8b3554" : "Europe/Zurich",\
+         "64e60a25-d25b-45b6-86ef-7c7712b88353" : "Europe/Brussels",\
+         "addefed0-31a3-479f-aaba-88e018bd0ce6" : "Europe/Rome",\
+         "d3650531-361a-4a5f-aa60-f37915cf6cc4" : "Europe/Berlin",\
+         "93903ac6-b964-42d6-8383-3d90ab6799bd" : "Europe/Brussels",\
+         "7fddb74d-22c4-4919-b459-a4ea67245abc" : "Europe/Madrid",\
+         "4ea307de-04a4-4ca8-9ba7-549923e8c64c" : "Europe/Rome",\
+         "5621b870-3169-4cb1-b9f8-a0dd8e335297" : "Europe/Vienna",\
+         "671a2928-d479-4dae-8531-dd9b17f09771" : "Europe/Amsterdam",\
+         "20d24947-7e60-479e-8e99-62fb4ff9b5d0" : "Europe/Amsterdam",\
+         "860727d5-3ac3-4f4c-8992-a59d9e64d79c" : "Europe/London"\
+        \}\
+\
+#dictionary timezone for CC\
+tz_dict_CC=\{"PL"            : "Europe/Warsaw",\
+            "PT"            : "Europe/Lisbon",\
+            "ES"            : "Europe/Madrid",\
+            "+390144230057" : "Europe/Rome",\
+            "+34919019025"  : "Europe/Madrid",\
+            "+34919019026"  : "Europe/Madrid",\
+            "+34919019079"  : "Europe/Madrid",\
+            "+351210201592" : "Europe/Lisbon",\
+            "+48221043364"  : "Europe/Warsaw"\
+           \}\
+\
+#dictionary marketID for CC: phone number identifies market id\
+market_id_dict_CC=\{"+48221043364"  : "PL",\
+                   "+351210201592" : "PT",\
+                   "+34919019026"  : "ES",\
+                   "+34919019025"  : "ES",\
+                   "+34919019079"  : "ES",\
+                   "+390144230057" : "IT"\
+                  \}\
+\
+#dictionary blacklist to drop Leasys Rent traces\
+black_list=\{"b47015b0-1ca4-45a0-85da-3a7e9fbc039e" : "FR-Leasys Rent",\
+            "eb9e46c1-c8c7-412e-8ce6-2b99052ce72a" : "IT-Leasys Rent"\
+           \}\
+\
+def set_timestamp(rec, instance_id, system_endpoint):\
+    if rec != '':\
+        #check if is cc instance: phone number identify timezone\
+        if instance_id == "ee44f486-e794-4ff9-b09c-109e1208aa43": #then is cc\
+            tz = pytz.timezone(tz_dict_CC.get(system_endpoint))\
+        else:   \
+            tz = pytz.timezone(tz_dict.get(instance_id))\
+            \
+        rec = rec.replace('T',' ')\
+        rec = rec.replace('Z','')\
+        dateTime_str = datetime.strptime(rec, '%Y-%m-%d %H:%M:%S') \
+        rec = dateTime_str.astimezone(tz)\
+        rec = rec.strftime("%Y-%m-%d %H:%M:%S")\
+        rec = rec.replace('-','')\
+        rec = rec.replace(':','')\
+        rec = rec.replace(' ','') \
+    return rec \
+\
+def compute(rec):\
+\
+    id = rec["InstanceARN"].split('/')[1]  #get id from InstanceARN field\
+\
+    if id not in black_list: #blacklist Leasys Rent IT/FR\
+        \
+        if rec["InitiationMethod"] != "OUTBOUND":\
+            #and rec["InitiationMethod"] != "DISCONNECT":\
+\
+            marketID = market_id_dict.get(id).split('-')[0]\
+            tmp = market_id_dict.get(id).split('-')[1]\
+            legalEntity = legal_entity_dict.get(tmp)\
+            businessLineID = business_line_dict.get(legalEntity)\
+            \
+            rec["ID"] = id\
+            rec["MARKET_ID"] = marketID\
+            rec["BUSINESS_LINE_ID"] = businessLineID\
+            rec["FCAB_LEGAL_ENTITY_ID"] = legalEntity\
+            \
+            rec["CALL_ID"] = rec["ContactId"]\
+            rec["CALL_NUMBER"] = rec["CustomerEndpoint"]["Address"]\
+\
+            #get VDN padre\
+            if rec["SystemEndpoint"] != None:\
+                systemEndpoint = rec["SystemEndpoint"]["Address"]\
+                rec["SYSTEM_ENDPOINT"] = systemEndpoint\
+                if systemEndpoint in vdn_padre_dict:\
+                    rec["CSC_CALL_NUMBER"] = vdn_padre_dict.get(systemEndpoint)   \
+                else:\
+                    rec["CSC_CALL_NUMBER"] = ""\
+            else:\
+                rec["CSC_CALL_NUMBER"] = ""\
+                rec["SYSTEM_ENDPOINT"] = ""\
+\
+            \
+            #check if is cc instance: phone number identify market id\
+            if id == "ee44f486-e794-4ff9-b09c-109e1208aa43": #then is cc\
+                if 'language' in rec["Attributes"]:\
+                    rec["MARKET_ID"] = rec["Attributes"]["language"]\
+                    if rec["SYSTEM_ENDPOINT"] == "":\
+                        rec["SYSTEM_ENDPOINT"] = rec["Attributes"]["language"]\
+                else:\
+                    rec["MARKET_ID"] = market_id_dict_CC.get(systemEndpoint)\
+                \
+\
+            #Connected to System Timestamp with local timezone\
+            rec["CALL_DATE_TIME"] = rec["ConnectedToSystemTimestamp"]\
+        \
+            #Disconnected to System Timestamp with local timezone\
+            rec["END_CALL_DATE"] = rec["DisconnectTimestamp"]\
+           \
+            #Enqueue Timestamp = waiting time with local timezone\
+            if rec["Queue"] != None:\
+                rec["WAIT_START_DATE"] = rec["Queue"]["EnqueueTimestamp"]\
+            else:\
+                rec["WAIT_START_DATE"] = ""\
+            \
+            #Get agent details\
+            if rec["Agent"] != None:\
+                #Get Agent username\
+                rec["CSC_OPERATOR_ID"] = rec["Agent"]["Username"]\
+                #Connected to Agent timestamp with local timezone\
+                rec["RESPONSE_DATE"] = rec["Agent"]["ConnectedToAgentTimestamp"]\
+            else:\
+                rec["CSC_OPERATOR_ID"] = "" \
+                rec["RESPONSE_DATE"] = ""\
+\
+\
+            if 'Lang' in rec["Attributes"]:\
+                lang = rec["Attributes"]["Lang"]\
+            else:\
+                lang = rec["MARKET_ID"] #if lang is not set so there is just a language -> given from market id\
+\
+            #vdn child\
+            if 'QueueName' in rec["Attributes"]:\
+                tmp = rec["Attributes"]["QueueName"]\
+                code = tmp[:5]\
+                rec["VDN"] = rec["MARKET_ID"] + "_" + lang + "_" + "AWS" + "_" + code\
+            else: #if a queue not exists => vdn child = vdn padre -> client closes call after welcome\
+                rec["VDN"] = rec["MARKET_ID"] + "_" + lang + "_" + "AWS" + "_"  + rec["CSC_CALL_NUMBER"]\
+\
+\
+            #Outcome call\
+            rec["OUTCOME_CALL"] = "DISCONNESSA"\
+            if rec["TransferredToEndpoint"] != None:\
+                rec["OUTCOME_CALL"] = "TRANSITATA"\
+            elif rec["AgentConnectionAttempts"] != None:\
+                if rec["AgentConnectionAttempts"] != 0 and rec["Agent"] == None:\
+                    rec["OUTCOME_CALL"] = "ABBANDONATA AL RING"\
+                elif rec["AgentConnectionAttempts"] == 0 and rec["Queue"] != None:\
+                    rec["OUTCOME_CALL"] = "ABBANDONATA IN CODA"\
+                elif rec["AgentConnectionAttempts"] != 0 and rec["Agent"] != None: #and rec["InitiationMethod"] == "INBOUND":\
+                    rec["OUTCOME_CALL"] = "RISPOSTA"\
+            else:\
+                rec["OUTCOME_CALL"] = "other"\
+\
+\
+            if 'dayType' in rec["Attributes"]:\
+                if rec["Attributes"]["dayType"] == "OUT_WORK_DAY" or rec["Attributes"]["dayType"] == "HOLIDAY":\
+                        rec["OVERTIME_FLAG"] = "Y"\
+                else:\
+                        rec["OVERTIME_FLAG"] = "N"\
+            else:\
+                rec["OVERTIME_FLAG"] = ""\
+\
+            #3 -> Amazon connect\
+            rec["SERVICE_PROVIDER"] = "AMAZON CONNECT"\
+\
+            if rec["NextContactId"] != None:\
+                rec["NEXT_CONTACT_ID"] = rec["NextContactId"]\
+            else:\
+                rec["NEXT_CONTACT_ID"] = ""\
+\
+            if rec["PreviousContactId"] != None:\
+                rec["PREVIOUS_CONTACT_ID"] = rec["PreviousContactId"]\
+            else:\
+                rec["PREVIOUS_CONTACT_ID"] = ""\
+            \
+            if 'FLAG_TRANSFER' in rec["Attributes"]:\
+                rec["FLAG_TRANSFER"] = rec["Attributes"]["FLAG_TRANSFER"]\
+            else:\
+                rec["FLAG_TRANSFER"] = "F"\
+                \
+            if 'SURVEY_RESULT' in rec["Attributes"]:\
+                rec["SURVEY_RESULT"] = rec["Attributes"]["SURVEY_RESULT"]\
+            else:\
+                rec["SURVEY_RESULT"] = ""\
+            \
+            return rec\
+\
+map1 =  Map.apply(datasource0, f = compute, transformation_ctx = "map1")\
+\
+""" Converting function to UDF """\
+convertUDF = udf(lambda z, y, x: set_timestamp(z, y, x))\
+\
+traces = SelectFields.apply(frame = map1, paths = [\
+        "MARKET_ID","BUSINESS_LINE_ID","FCAB_LEGAL_ENTITY_ID","CALL_ID",\
+        "CALL_NUMBER","CALL_DATE_TIME","WAIT_START_DATE","RESPONSE_DATE","END_CALL_DATE",\
+        "CSC_CALL_NUMBER","VDN","OUTCOME_CALL","CSC_OPERATOR_ID","OVERTIME_FLAG", \
+        "SERVICE_PROVIDER","NEXT_CONTACT_ID","PREVIOUS_CONTACT_ID","FLAG_TRANSFER","SURVEY_RESULT", "ID", "SYSTEM_ENDPOINT","InitiationMethod"\
+], transformation_ctx = "selectfields2")\
+\
+\
+tracesDF = traces.toDF()\
+tracesDF = tracesDF.withColumn("CALL_DATE_TIME", convertUDF(col("CALL_DATE_TIME"), col("ID"), col("SYSTEM_ENDPOINT"))) \\\
+                   .withColumn("END_CALL_DATE", convertUDF(col("END_CALL_DATE"), col("ID"), col("SYSTEM_ENDPOINT"))) \\\
+                   .withColumn("WAIT_START_DATE", convertUDF(col("WAIT_START_DATE"), col("ID"), col("SYSTEM_ENDPOINT"))) \\\
+                   .withColumn("RESPONSE_DATE", convertUDF(col("RESPONSE_DATE"), col("ID"), col("SYSTEM_ENDPOINT"))) \\\
+                   .drop(col("ID")).drop(col("SYSTEM_ENDPOINT"))\
+                   \
+# get CALL_ID of all survey traces\
+surveyIDList = [row.CALL_ID for row in tracesDF.filter((tracesDF.OUTCOME_CALL == "DISCONNESSA") & (tracesDF.FLAG_TRANSFER == "T") & (tracesDF.InitiationMethod != "INBOUND")).select("CALL_ID").collect()]\
+\
+#remove Callback with no answer\
+call_id_list = [row.CALL_ID for row in tracesDF.select("CALL_ID").collect()]\
+tracesDF = tracesDF.withColumn("NEXT_CONTACT_ID", when((~col("NEXT_CONTACT_ID").isin(call_id_list) & (col("InitiationMethod") == "INBOUND")),"").otherwise(col("NEXT_CONTACT_ID")))\
+#tracesDF.show(truncate=False)\
+\
+# remove survey traces from tracesDF\
+tracesDF = tracesDF.filter(~col("CALL_ID").isin(surveyIDList)).drop(col("InitiationMethod"))\
+#tracesDF.show(truncate=False)\
+\
+# for INBOUND + DISCONNECT\
+tracesDF = tracesDF.withColumn("NEXT_CONTACT_ID", when( ((col("NEXT_CONTACT_ID").isin(surveyIDList)) & (col("PREVIOUS_CONTACT_ID") == "")),"").otherwise(col("NEXT_CONTACT_ID")))\
+#tracesDF.show(truncate=False)\
+\
+if tracesDF.count() > 0:\
+\
+    inbound = tracesDF.filter((tracesDF.NEXT_CONTACT_ID == "") & (tracesDF.PREVIOUS_CONTACT_ID == ""))\
+    #inbound.show(truncate=False)\
+\
+    tracesDF = tracesDF.filter((tracesDF.NEXT_CONTACT_ID != "") | (tracesDF.PREVIOUS_CONTACT_ID != ""))\
+    while tracesDF.count() > 1:\
+        \
+        inbound_transfer = tracesDF.alias("DF1").join(tracesDF.alias("DF2"), col("DF1.NEXT_CONTACT_ID") == col("DF2.CALL_ID"),"inner").select(col("DF1.MARKET_ID"),col("DF1.BUSINESS_LINE_ID"),col("DF1.FCAB_LEGAL_ENTITY_ID"),col("DF2.CALL_ID"),col("DF1.CALL_NUMBER"),col("DF1.CALL_DATE_TIME"),col("DF1.WAIT_START_DATE"),col("DF2.RESPONSE_DATE"),col("DF2.END_CALL_DATE"),col("DF1.CSC_CALL_NUMBER"),col("DF1.VDN"),col("DF2.OUTCOME_CALL"),col("DF2.CSC_OPERATOR_ID"),col("DF1.OVERTIME_FLAG"), col("DF1.SERVICE_PROVIDER"),\
+        #col("DF2.NEXT_CONTACT_ID"),\
+        (when(col("DF2.NEXT_CONTACT_ID").isin(surveyIDList),"").otherwise(col("DF2.NEXT_CONTACT_ID"))).alias("NEXT_CONTACT_ID"),\
+        col("DF1.PREVIOUS_CONTACT_ID"),col("DF2.FLAG_TRANSFER"),col("DF2.SURVEY_RESULT"))        \
+        #inbound_transfer.show(truncate=False)\
+        tracesDF=inbound_transfer\
+        inbound_loop = inbound.union(tracesDF.filter((tracesDF.NEXT_CONTACT_ID == "") & (tracesDF.PREVIOUS_CONTACT_ID == "")))\
+\
+        inbound = inbound_loop\
+    \
+    ouputDF = inbound.distinct() #remove duplicates \
+    output = DynamicFrame.fromDF(ouputDF, glueContext, "test_nest")  \
+    \
+    #inboundWithoutDuplicates = inbound.distinct()\
+    #ouputDF = inboundWithoutDuplicates\
+    #output = DynamicFrame.fromDF(ouputDF, glueContext, "test_nest")\
+else:\
+    output = traces\
+\
+outputTraces = DropFields.apply(frame = output, paths = ('NEXT_CONTACT_ID','PREVIOUS_CONTACT_ID'))\
+\
+resolvechoice3 = ResolveChoice.apply(frame = outputTraces, choice = "MATCH_CATALOG", database = "fcab-lsys-connect-prod-database", table_name = "connect", transformation_ctx = "resolvechoice3")\
+\
+datasink4=glueContext.write_dynamic_frame.from_options(\
+    frame = resolvechoice3,\
+    connection_type = "s3",\
+    connection_options = \{\
+        "path": "s3://fcab-lsys-connect-prod-traces/processing/"\
+        \},\
+    format = "csv",\
+    format_options=\{\
+        "quoteChar": -1,\
+        "separator": "|",\
+        "writeHeader": False\
+    \},\
+    transformation_ctx = "datasink4")\
+\
+\
+s3=boto3.resource('s3')\
+s3Client = boto3.client("s3")\
+\
+\
+S3_BUCKET_NAME = 'fcab-lsys-connect-prod-traces'\
+s3Bucket = s3.Bucket(S3_BUCKET_NAME)\
+\
+today = datetime.now(pytz.timezone('Europe/Rome'))\
+year=today.strftime("%Y")\
+month=today.strftime("%m")\
+day=today.strftime("%d")\
+\
+previousDate = today - timedelta(days=1)\
+yearPrevious=previousDate.strftime("%Y")\
+monthPrevious=previousDate.strftime("%m")\
+dayPrevious=previousDate.strftime("%d")\
+\
+header="CLAC|" +  year + month + day + "|" + yearPrevious + monthPrevious + dayPrevious + "|" + yearPrevious + monthPrevious + dayPrevious + "\\n"\
+\
+body = header\
+calls=0\
+\
+for obj in s3Bucket.objects.filter(Prefix="processing/"):\
+\
+    S3_FILE_NAME=obj.key\
+    fileContent = obj.get()["Body"].read().decode('utf-8')\
+    calls+=fileContent.count('\\n')\
+\
+    for line in fileContent.splitlines():\
+        body+=line + "\\n"\
+\
+    s3Client.delete_object(Bucket=S3_BUCKET_NAME,Key= S3_FILE_NAME)\
+\
+footer="CLAC|"+ str(calls)\
+body+=footer\
+\
+\
+attempt=1\
+fileName="CRM_CLAC_" + year + month + day + "_" + str(attempt) + ".txt"\
+\
+fileObject_toBeSent = s3.Object(S3_BUCKET_NAME , 'toBeSent/' + fileName)\
+result_toBeSent = fileObject_toBeSent.put(Body=body)\
+\
+\
+    #CLAC|20220131|20220130|20220130\
+    #CLAC|0000000000002\
+\
+job.commit()\
+}
