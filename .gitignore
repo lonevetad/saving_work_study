@@ -31,8 +31,27 @@
 *.out
 *.app
 
+# resources and output
+output
+output/
+**/output
+*/output
+*.zip
+*.txt
+*.csv
+*.rtf
+*.lsx
+*.xlsx
+*.json
+
+.~*
+*.~*
 
 # JavaScript
 */node_modules
 **/node_modules
 node_modules/
+
+
+#special cases
+DWH-analysis
